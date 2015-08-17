@@ -61,6 +61,7 @@ recurse_uninstall:
 clean:	recurse_clean
 	rm -f multipath-tools.spec
 	rm -rf rpms
+	$(MAKE) -C test clean
 
 install:	recurse_install
 
@@ -79,3 +80,7 @@ release:
 
 rpm: release
 	rpmbuild -bb multipath-tools.spec
+
+check: all
+	$(MAKE) -C test
+	$(MAKE) -C test check

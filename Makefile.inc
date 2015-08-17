@@ -45,6 +45,7 @@ syslibdir   = $(prefix)/$(LIB)
 libdir	    = $(prefix)/$(LIB)/multipath
 unitdir     = $(prefix)/$(SYSTEMDPATH)/systemd/system
 mpathpersistdir = $(TOPDIR)/libmpathpersist
+includedir  = $(prefix)/usr/include
 
 GZIP        = gzip -9 -c
 INSTALL_PROGRAM = install
