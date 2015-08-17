@@ -16,13 +16,15 @@ ifdef SYSTEMD
 	endif
 endif
 
+HEADERS = libmultipath/libmultipath.h
+
 OBJS = memory.o parser.o vector.o devmapper.o callout.o \
        hwtable.o blacklist.o util.o dmparser.o config.o \
        structs.o discovery.o propsel.o dict.o \
        pgpolicies.o debug.o defaults.o uevent.o \
        switchgroup.o uxsock.o print.o alias.o log_pthread.o \
        log.o configure.o structs_vec.o sysfs.o prio.o checkers.o \
-       lock.o waiter.o file.o wwids.o prioritizers/alua_rtpg.o
+       lock.o waiter.o file.o wwids.o prioritizers/alua_rtpg.o public_api.o
 
 LIBDM_API_FLUSH = $(shell grep -Ecs '^[a-z]*[[:space:]]+dm_task_no_flush' /usr/include/libdevmapper.h)
 
@@ -52,6 +54,8 @@ ifneq ($(strip $(LIBDM_API_DEFERRED)),0)
 	CFLAGS += -DLIBDM_API_DEFERRED
 endif
 
+CFLAGS += -I$(multipathdir)
+
 all: $(LIBS)
 
 $(LIBS): $(OBJS)
@@ -62,9 +66,13 @@ install:
 	$(INSTALL_PROGRAM) -d $(DESTDIR)$(syslibdir)
 	$(INSTALL_PROGRAM) -m 755 $(LIBS) $(DESTDIR)$(syslibdir)/$(LIBS)
 	$(INSTALL_PROGRAM) -m 755 -d $(DESTDIR)$(libdir)
+	$(INSTALL_PROGRAM) -m 644 -D $(HEADERS) $(DESTDIR)/$(includedir)/$(HEADERS)
+	ln -sf $(LIBS) $(DESTDIR)/$(syslibdir)/$(DEVLIB)
 
 uninstall:
 	rm -f $(DESTDIR)$(syslibdir)/$(LIBS)
+	rm -f $(DESTDIR)$(includedir)/$(HEADERS)
+	rm -f $(DESTDIR)/$(syslibdir)/$(DEVLIB)
 
 clean:
 	rm -f core *.a *.o *.gz *.so *.so.*
