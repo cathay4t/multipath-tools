@@ -43,8 +43,6 @@
 
 #define _DMMP_ERROR_MSG_LENGTH 256
 
-static char _dmmp_error_msg[_DMMP_ERROR_MSG_LENGTH];
-
 #define _die_if_null(x) if (x == NULL) exit(EXIT_FAILURE);
 
 #define _msg_clear(x) x[0] = '\0'
@@ -61,6 +59,14 @@ static char _dmmp_error_msg[_DMMP_ERROR_MSG_LENGTH];
 int logsink;
 
 static struct udev *udev = NULL;
+
+struct dmmp_context {
+	int refcount;
+	void (*log_fn)(struct abc_ctx *ctx,
+		       int priority, const char *file, int line, const char *fn,
+		       const char *format, va_list args);
+	int log_priority;
+};
 
 struct dmmp_path {
 	uint32_t pg_id;
