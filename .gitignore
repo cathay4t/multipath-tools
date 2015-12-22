@@ -10,3 +10,6 @@ multipath/multipath
 multipathd/multipathd
 mpathpersist/mpathpersist
 .nfs*
+.project
+.cproject
+.settings

@@ -51,6 +51,8 @@
 		snprintf(x, len, format, ##__VA_ARGS__); \
 	}
 
+static char _dmmp_error_msg[_DMMP_ERROR_MSG_LENGTH];
+
 #define _dmmp_err_msg_clear() _msg_clear(_dmmp_error_msg)
 #define _dmmp_err_msg_set(format, ...) \
 	_msg_set(_dmmp_error_msg, _DMMP_ERROR_MSG_LENGTH, \
@@ -62,7 +64,7 @@ static struct udev *udev = NULL;
 
 struct dmmp_context {
 	int refcount;
-	void (*log_fn)(struct abc_ctx *ctx,
+	void (*log_fn)(struct dmmp_context *ctx,
 		       int priority, const char *file, int line, const char *fn,
 		       const char *format, va_list args);
 	int log_priority;
@@ -71,12 +73,12 @@ struct dmmp_context {
 struct dmmp_path {
 	uint32_t pg_id;
 	char name[FILE_NAME_SIZE];
-	enum dmmp_path_status status;
+	uint32_t status;
 };
 
 struct dmmp_path_group {
 	uint32_t id;	/* path->pgindex, will be used for path group switch */
-	enum dmmp_path_group_status status;
+	uint32_t status;
 	uint32_t priority;
 	const char *selector;
 	uint32_t mp_path_count;
@@ -483,7 +485,7 @@ static enum devtypes _get_dev_type(char *dev)
 }
 
 
-int dmmp_mpath_list(struct dmmp_mpath ***mpaths, uint32_t *mpath_count)
+int dmmp_mpath_list(struct dmmp_context *ctx, struct dmmp_mpath ***mpaths, uint32_t *mpath_count)
 {
 	struct multipath *mpp = NULL;
 	struct dmmp_mpath *mpath = NULL;
@@ -719,12 +721,14 @@ int dmmp_path_group_list_get(struct dmmp_mpath *mpath,
 			     struct dmmp_path_group ***mp_pgs,
 			     uint32_t *mp_pg_count)
 {
-	*mp_pgs = NULL;
-	*mp_pg_count = 0;
-	if (mpath != NULL)
-		*mp_pgs = mpath->mp_pgs;
-		*mp_pg_count = mpath->mp_pg_count;
-	return 0;
+
+	if (mp_pgs == NULL || mp_pg_count == NULL || mpath == NULL)
+		return DMMP_ERR_INVALID_ARGUMENT;
+
+	*mp_pgs = mpath->mp_pgs;
+	*mp_pg_count = mpath->mp_pg_count;
+
+	return DMMP_OK;
 }
 
 uint32_t dmmp_path_group_id_get(struct dmmp_path_group *mp_pg)
@@ -762,12 +766,13 @@ int dmmp_path_list_get(struct dmmp_path_group *mp_pg,
 		       struct dmmp_path ***mp_paths,
 		       uint32_t *mp_path_count)
 {
-	*mp_paths = NULL;
-	*mp_path_count = 0;
-	if (mp_pg != NULL)
-		*mp_paths = mp_pg->mp_paths,
-		*mp_path_count = mp_pg->mp_path_count;
-	return 0;
+	if (mp_pg == NULL || mp_paths == NULL || mp_path_count == NULL)
+		return DMMP_ERR_INVALID_ARGUMENT;
+
+    *mp_paths = mp_pg->mp_paths,
+    *mp_path_count = mp_pg->mp_path_count;
+
+    return DMMP_OK;
 }
 
 const char *dmmp_path_name_get(struct dmmp_path *mp_path)
