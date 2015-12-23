@@ -602,18 +602,15 @@ const char *dmmp_mpath_name_get(struct dmmp_mpath *mpath)
 	return mpath->alias;
 }
 
-struct dmmp_mpath *dmmp_mpath_get_by_name(const char *mpath_name)
+struct dmmp_mpath *dmmp_mpath_get_by_name(struct dmmp_mpath **mpaths,
+		                                  int mpath_count,
+		                                  const char *mpath_name)
 {
-	struct dmmp_mpath **mpaths = NULL;
-	uint32_t mpath_count = 0;
 	uint32_t i = 0;
 	struct dmmp_mpath *rc_mpath = NULL;
 
-	if (mpath_name == NULL)
+	if (mpath_name == NULL || mpaths == NULL)
 		return NULL;
-
-	if (dmmp_mpath_list(&mpaths, &mpath_count) != 0)
-		goto out;
 
 	for (i = 0; i < mpath_count; ++i) {
 		if (mpaths[i]->alias == NULL)
@@ -627,8 +624,6 @@ struct dmmp_mpath *dmmp_mpath_get_by_name(const char *mpath_name)
 out:
 	if (rc_mpath != NULL)
 		rc_mpath = dmmp_mpath_copy(rc_mpath);
-
-	dmmp_mpath_list_free(mpaths, mpath_count);
 
 	return rc_mpath;
 }
@@ -746,8 +741,7 @@ uint32_t dmmp_path_group_priority_get(struct dmmp_path_group *mp_pg)
 }
 
 
-enum dmmp_path_group_status
-dmmp_path_group_status_get(struct dmmp_path_group *mp_pg)
+uint32_t dmmp_path_group_status_get(struct dmmp_path_group *mp_pg)
 {
 	if (mp_pg == NULL)
 		return DMMP_PATH_GROUP_STATUS_UNDEF;
@@ -782,22 +776,25 @@ const char *dmmp_path_name_get(struct dmmp_path *mp_path)
 	return mp_path->name;
 }
 
-enum dmmp_path_status dmmp_path_status_get(struct dmmp_path *mp_path)
+uint32_t dmmp_path_status_get(struct dmmp_path *mp_path)
 {
 	if (mp_path == NULL)
 		return DMMP_PATH_STATUS_WILD;
 	return mp_path->status;
 }
 
-struct dmmp_mpath *dmmp_mpath_get_by_block_path(const char *blk_path)
+struct dmmp_mpath *dmmp_mpath_get_by_block_path(struct dmmp_mpath **mpaths,
+		int mpath_count,
+		const char *blk_path)
 {
 	char tmp_blk_path[FILE_NAME_SIZE];
 	enum devtypes dev_type;
 	char *converted_dev;
-	struct dmmp_mpath **mpaths = NULL;
-	uint32_t mpath_count = 0;
 	uint32_t i = 0;
 	struct dmmp_mpath *rc_mpath = NULL;
+
+	if (mpaths == NULL)
+		return NULL;
 
 	strncpy(tmp_blk_path, blk_path, FILE_NAME_SIZE);
 	tmp_blk_path[FILE_NAME_SIZE - 1] = '\0';
@@ -808,9 +805,6 @@ struct dmmp_mpath *dmmp_mpath_get_by_block_path(const char *blk_path)
 	if (converted_dev == NULL)
 		goto out;
 
-	if (dmmp_mpath_list(&mpaths, &mpath_count) != 0)
-		goto out;
-
 	for (i = 0; i < mpath_count; ++i) {
 		if (dmmp_path_group_id_search(mpaths[i], converted_dev) != 0)
 			rc_mpath = mpaths[i];
@@ -819,8 +813,6 @@ struct dmmp_mpath *dmmp_mpath_get_by_block_path(const char *blk_path)
 out:
 	if (rc_mpath != NULL)
 		rc_mpath = dmmp_mpath_copy(rc_mpath);
-
-	dmmp_mpath_list_free(mpaths, mpath_count);
 
 	return rc_mpath;
 }

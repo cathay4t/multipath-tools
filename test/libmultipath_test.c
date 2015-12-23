@@ -31,13 +31,16 @@
 #define FILE_NAME_SIZE 256
 
 
-void test_dmmp_mpath_get_by_name(const char *name, const char *wwid)
+void test_dmmp_mpath_get_by_name(struct dmmp_mpath **mpaths,
+		int mpath_count,
+		const char *name,
+		const char *wwid)
 {
 	struct dmmp_mpath *mpath = NULL;
 	const char *name_tmp;
 	const char *wwid_tmp;
 
-	mpath = dmmp_mpath_get_by_name(name);
+	mpath = dmmp_mpath_get_by_name(mpaths, mpath_count, name);
 	if (mpath == NULL)
 		FAIL("dmmp_mpath_get_by_name(): %s", name);
 	name_tmp = dmmp_mpath_name_get(mpath);
@@ -57,7 +60,9 @@ void test_dmmp_mpath_get_by_name(const char *name, const char *wwid)
 	dmmp_mpath_free(mpath);
 }
 
-void test_paths(struct dmmp_path_group *mp_pg)
+void test_paths(struct dmmp_mpath **mpaths,
+		int mpath_count,
+		struct dmmp_path_group *mp_pg)
 {
 	struct dmmp_path **mp_ps = NULL;
 	struct dmmp_mpath *mpath = NULL;
@@ -79,7 +84,7 @@ void test_paths(struct dmmp_path_group *mp_pg)
 		     dmmp_path_status_get(mp_ps[i]));
 		snprintf(blk_path, FILE_NAME_SIZE, "/dev/%s", dev_name);
 		blk_path[FILE_NAME_SIZE - 1] = '\0';
-		mpath = dmmp_mpath_get_by_block_path(blk_path);
+		mpath = dmmp_mpath_get_by_block_path(mpaths, mpath_count, blk_path);
 		if (mpath == NULL)
 			FAIL("dmmp_mpath_get_by_block_path(): Got NULL\n");
 		PASS("dmmp_mpath_get_by_block_path(): Got %s\n",
@@ -88,12 +93,14 @@ void test_paths(struct dmmp_path_group *mp_pg)
 	}
 }
 
-void test_path_groups(struct dmmp_mpath *mpath)
+void test_path_groups(struct dmmp_mpath **mpaths,
+		int mpath_count,
+		struct dmmp_mpath *mpath)
 {
 	struct dmmp_path_group **mp_pgs = NULL;
 	uint32_t mp_pg_count = NULL;
 	uint32_t i = 0;
-
+ 
 	if (dmmp_path_group_list_get(mpath, &mp_pgs, &mp_pg_count) != 0)
 		FAIL("dmmp_path_group_list_get(): rc != 0\n");
 	if ((mp_pg_count == 0) && (mp_pgs != NULL))
@@ -117,19 +124,20 @@ void test_path_groups(struct dmmp_mpath *mpath)
 		     dmmp_path_group_status_get(mp_pgs[i]));
 		PASS("dmmp_path_group_selector_get(): selector = %s\n",
 		     dmmp_path_group_selector_get(mp_pgs[i]));
-		test_paths(mp_pgs[i]);
+		test_paths(mpaths, mpath_count, mp_pgs[i]);
 	}
 }
 
 int main(int argc, char *argv[])
 {
+	struct dmmp_context *ctx = NULL;
 	struct dmmp_mpath **mpaths = NULL;
 	uint32_t mpath_count = NULL;
 	const char *name;
 	const char *wwid;
 	uint32_t i = 0;
 
-	if (dmmp_mpath_list(&mpaths, &mpath_count) != 0)
+	if (dmmp_mpath_list(ctx, &mpaths, &mpath_count) != 0)
 		FAIL("dmmp_mpath_list(): rc != 0\n");
 	if (mpath_count == 0)
 		FAIL("dmmp_mpath_list(): Got no multipath devices\n");
@@ -140,8 +148,8 @@ int main(int argc, char *argv[])
 		if ((name == NULL) ||(wwid == NULL))
 			FAIL("dmmp_mpath_list(): Got NULL name or wwid");
 		PASS("dmmp_mpath_list(): Got mpath: %s %s\n", name, wwid);
-		test_dmmp_mpath_get_by_name(name, wwid);
-		test_path_groups(mpaths[i]);
+		test_dmmp_mpath_get_by_name(mpaths, mpath_count, name, wwid);
+		test_path_groups(mpaths, mpath_count, mpaths[i]);
 	}
 	dmmp_mpath_list_free(mpaths, mpath_count);
 	exit(0);

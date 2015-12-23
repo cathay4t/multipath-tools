@@ -164,7 +164,9 @@ const char *dmmp_mpath_name_get(struct dmmp_mpath *mpath);
  *          responsibility of the caller to free the memory returned with
  *          dmmp_mpath_free().
  */
-struct dmmp_mpath *dmmp_mpath_get_by_name(const char *mpath_name);
+struct dmmp_mpath *dmmp_mpath_get_by_name(struct dmmp_mpath **mpaths,
+		int mpath_count,
+		const char *mpath_name);
 
 /**
  * dmmp_mpath_get_by_block_path() - look up a multipath map by block name.
@@ -174,7 +176,9 @@ struct dmmp_mpath *dmmp_mpath_get_by_name(const char *mpath_name);
  *          responsibility of the caller to free the memory returned with
  *          dmmp_mpath_free().
  */
-struct dmmp_mpath *dmmp_mpath_get_by_block_path(const char *blk_path);
+struct dmmp_mpath *dmmp_mpath_get_by_block_path(struct dmmp_mpath **mpaths,
+		int mpath_count,
+		const char *blk_path);
 
 
 /**
@@ -207,19 +211,17 @@ uint32_t dmmp_path_group_id_get(struct dmmp_path_group *mp_pg);
  * dmmp_path_group_priority_get() - get the priority for the path group.
  * @mp_pg:	the path group
  *
- * Return: pathg group priority
+ * Return: path group priority
  */
 uint32_t dmmp_path_group_priority_get(struct dmmp_path_group *mp_pg);
 
-int dmmp_path_group_status_get(struct dmmp_path_group *mp_pg);
-
 /**
- * dmmp_path_group_status_get() - get the status for the pathgroup
- * @mp_pg:	the path group.
+ * dmmp_path_group_status_get() - get the status for the path group.
+ * @mp_pg:	the path group
  *
- * Return: int for pathgroup status.
+ * Return: path group status
  */
-int dmmp_path_group_status_get(struct dmmp_path_group *mp_pg);
+uint32_t dmmp_path_group_status_get(struct dmmp_path_group *mp_pg);
 
 /**
  * dmmp_path_group_selector_get() - get the path selector for a path group
@@ -259,14 +261,8 @@ const char *dmmp_path_name_get(struct dmmp_path *mp_path);
  *
  * Return: int of the path status.
  */
-int dmmp_path_status_get(struct dmmp_path *mp_path);
+uint32_t dmmp_path_status_get(struct dmmp_path *mp_path);
 
-
-
-/*
- * Providing path_name retrieved from dmmp_path_name_get().
- * Return path group id. Return 0 if not found.
- */
 /**
  * dmmp_path_group_id_search() - look up a path group ID by path name
  * @mpath:	map to search
@@ -277,6 +273,17 @@ int dmmp_path_status_get(struct dmmp_path *mp_path);
  */
 uint32_t dmmp_path_group_id_search(struct dmmp_mpath *mpath,
                                    const char *path_name);
+
+/**
+ * dmmp_mpath_copy() - allocate a copy of the mpath
+ * @mpath:	mpath to dupicate
+ *
+ * Return: Pointer to allocated mpath It is the responsibility of the 
+ *         caller to use dmmp_mpath_free() to release the memory. 
+ *
+ */
+struct dmmp_mpath *dmmp_mpath_copy(struct dmmp_mpath *mpath);
+
 
 /*
  * No need to free the returned memory.
