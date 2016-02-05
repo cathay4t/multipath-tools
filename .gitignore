@@ -10,3 +10,7 @@ multipath/multipath
 multipathd/multipathd
 mpathpersist/mpathpersist
 .nfs*
+libdmmp/docs/man/*.3
+libdmmp/*.so.*
+libdmmp/test/libdmmp_test
+libdmmp/test/libdmmp_speed_test

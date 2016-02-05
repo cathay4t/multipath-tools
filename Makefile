@@ -24,6 +24,7 @@ BUILDDIRS = \
 	libmultipath/prioritizers \
 	libmultipath/checkers \
 	libmpathpersist \
+	libdmmp \
 	multipath \
 	multipathd \
 	mpathpersist \
