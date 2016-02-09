@@ -411,6 +411,25 @@ snprint_pg_selector (char * buff, size_t len, struct pathgroup * pgp, int group)
 }
 
 static int
+snprint_pg_uuid (char * buff, size_t len, struct pathgroup * pgp, int group_num)
+{
+	struct path * pp;
+
+	pp = VECTOR_LAST_SLOT(pgp->paths);
+	if (pp != NULL)
+		return snprint_str(buff, len, pp->wwid);
+	else
+		return snprint_str(buff, len, "");
+}
+
+static int
+snprint_pg_group (char * buff, size_t len, struct pathgroup * pgp,
+		int group_num)
+{
+	return snprint_int(buff, len, group_num);
+}
+
+static int
 snprint_pg_pri (char * buff, size_t len, struct pathgroup * pgp, int group)
 {
 	/*
@@ -601,7 +620,9 @@ struct path_data pd[] = {
 };
 
 struct pathgroup_data pgd[] = {
+	{'w', "uuid",          0, snprint_pg_uuid},
 	{'s', "selector",      0, snprint_pg_selector},
+	{'g', "group",         0, snprint_pg_group},
 	{'p', "pri",           0, snprint_pg_pri},
 	{'t', "dm_st",         0, snprint_pg_state},
 	{0, NULL, 0 , NULL}

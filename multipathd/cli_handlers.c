@@ -439,6 +439,28 @@ cli_list_groups (void * v, char ** reply, int * len, void * data)
 }
 
 int
+cli_list_groups_fmt (void * v, char ** reply, int * len, void * data)
+{
+	struct vectors * vecs = (struct vectors *)data;
+	char * fmt = get_keyparam(v, FMT);
+
+	condlog(3, "list groups (operator)");
+
+	return show_groups(reply, len, vecs, fmt, 1);
+}
+
+int
+cli_list_groups_raw (void * v, char ** reply, int * len, void * data)
+{
+	struct vectors * vecs = (struct vectors *)data;
+	char * fmt = get_keyparam(v, FMT);
+
+	condlog(3, "list groups (operator)");
+
+	return show_groups(reply, len, vecs, fmt, 0);
+}
+
+int
 cli_list_maps_fmt (void * v, char ** reply, int * len, void * data)
 {
 	struct vectors * vecs = (struct vectors *)data;
