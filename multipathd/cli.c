@@ -168,6 +168,7 @@ load_keys (void)
 	r += add_key(keys, "paths", PATHS, 0);
 	r += add_key(keys, "maps", MAPS, 0);
 	r += add_key(keys, "multipaths", MAPS, 0);
+	r += add_key(keys, "groups", GROUPS, 0);
 	r += add_key(keys, "path", PATH, 1);
 	r += add_key(keys, "map", MAP, 1);
 	r += add_key(keys, "multipath", MAP, 1);
@@ -474,6 +475,7 @@ cli_init (void) {
 	add_handler(LIST+MAPS+FMT, NULL);
 	add_handler(LIST+MAPS+RAW+FMT, NULL);
 	add_handler(LIST+MAPS+TOPOLOGY, NULL);
+	add_handler(LIST+GROUPS, NULL);
 	add_handler(LIST+TOPOLOGY, NULL);
 	add_handler(LIST+MAP+TOPOLOGY, NULL);
 	add_handler(LIST+CONFIG, NULL);

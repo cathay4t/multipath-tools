@@ -24,6 +24,50 @@
 #include "uevent.h"
 
 int
+show_groups (char ** r, int * len, struct vectors * vecs, char * style,
+	     int pretty)
+{
+	int i, j;
+	struct multipath * mpp;
+	struct pathgroup * pgp;
+	char * c;
+	char * reply;
+	unsigned int maxlen = INITIAL_REPLY_LEN;
+	int again = 1;
+
+	reply = MALLOC(maxlen);
+
+	while (again) {
+		if (!reply)
+			return 1;
+
+		c = reply;
+
+		get_pathgroup_layout(vecs->mpvec, pretty);
+
+		if (pretty && VECTOR_SIZE(vecs->pathvec) > 0)
+			c += snprint_pathgroup_header(c, reply + maxlen - c,
+						      style);
+
+		vector_foreach_slot(vecs->mpvec, mpp, i) {
+			vector_foreach_slot(mpp->pg, pgp, j) {
+				pgp->selector = mpp->selector; /* hack */
+				c += snprint_pathgroup(c, reply + maxlen - c,
+						       style, pgp, j + 1,
+						       pretty);
+			}
+		}
+
+		again = ((c - reply) == (maxlen - 1));
+
+		REALLOC_REPLY(reply, again, maxlen);
+	}
+	*r = reply;
+	*len = (int)(c - reply + 1);
+	return 0;
+}
+
+int
 show_paths (char ** r, int * len, struct vectors * vecs, char * style,
 	    int pretty)
 {
@@ -127,7 +171,7 @@ show_maps_topology (char ** r, int * len, struct vectors * vecs)
 	char * reply;
 	unsigned int maxlen = INITIAL_REPLY_LEN;
 	int again = 1;
- 
+
 	get_path_layout(vecs->pathvec, 0);
 	reply = MALLOC(maxlen);
 
@@ -267,7 +311,7 @@ cli_list_map_topology (void * v, char ** reply, int * len, void * data)
 	struct multipath * mpp;
 	struct vectors * vecs = (struct vectors *)data;
 	char * param = get_keyparam(v, MAP);
-	
+
 	param = convert_dev(param, 0);
 	get_path_layout(vecs->pathvec, 0);
 	mpp = find_mp_by_str(vecs->mpvec, param);
@@ -382,6 +426,16 @@ show_maps (char ** r, int *len, struct vectors * vecs, char * style,
 	*r = reply;
 	*len = (int)(c - reply + 1);
 	return 0;
+}
+
+int
+cli_list_groups (void * v, char ** reply, int * len, void * data)
+{
+	struct vectors * vecs = (struct vectors *)data;
+
+	condlog(3, "list groups (operator)");
+
+	return show_groups(reply, len, vecs, PRINT_GROUP_CHECKER, 1);
 }
 
 int

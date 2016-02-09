@@ -15,6 +15,7 @@ enum {
 	__RESTOREQ,
 	__PATHS,
 	__MAPS,
+	__GROUPS,
 	__PATH,
 	__MAP,
 	__GROUP,
@@ -55,6 +56,7 @@ enum {
 #define PATH		(1 << __PATH)
 #define MAP		(1 << __MAP)
 #define GROUP		(1 << __GROUP)
+#define GROUPS		(1 << __GROUPS)
 #define RECONFIGURE	(1 << __RECONFIGURE)
 #define DAEMON		(1 << __DAEMON)
 #define STATUS		(1 << __STATUS)
@@ -67,7 +69,7 @@ enum {
 #define COUNT		(1 << __COUNT)
 #define WILDCARDS	(1 << __WILDCARDS)
 #define QUIT		(1 << __QUIT)
-#define SHUTDOWN	(1 << __SHUTDOWN)
+#define SHUTDOWN	(1UL << __SHUTDOWN)
 #define GETPRSTATUS	(1UL << __GETPRSTATUS)
 #define SETPRSTATUS	(1UL << __SETPRSTATUS)
 #define UNSETPRSTATUS	(1UL << __UNSETPRSTATUS)
