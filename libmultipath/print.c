@@ -293,6 +293,11 @@ snprint_path_uuid (char * buff, size_t len, struct path * pp)
 	return snprint_str(buff, len, pp->wwid);
 }
 
+static int snprint_path_groupnumber(char * buff, size_t len, struct path * pp)
+{
+	return snprint_int(buff, len, pp->pgindex);
+}
+
 static int
 snprint_hcil (char * buff, size_t len, struct path * pp)
 {
@@ -576,6 +581,7 @@ struct path_data pd[] = {
 	{'i', "hcil",          0, snprint_hcil},
 	{'d', "dev",           0, snprint_dev},
 	{'D', "dev_t",         0, snprint_dev_t},
+	{'g', "group",         0, snprint_path_groupnumber},
 	{'t', "dm_st",         0, snprint_dm_path_state},
 	{'o', "dev_st",        0, snprint_offline},
 	{'T', "chk_st",        0, snprint_chk_state},
