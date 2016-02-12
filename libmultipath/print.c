@@ -293,6 +293,11 @@ snprint_path_uuid (char * buff, size_t len, struct path * pp)
 	return snprint_str(buff, len, pp->wwid);
 }
 
+static int snprint_path_groupnumber(char * buff, size_t len, struct path * pp)
+{
+	return snprint_int(buff, len, pp->pgindex);
+}
+
 static int
 snprint_hcil (char * buff, size_t len, struct path * pp)
 {
@@ -400,13 +405,32 @@ snprint_pri (char * buff, size_t len, struct path * pp)
 }
 
 static int
-snprint_pg_selector (char * buff, size_t len, struct pathgroup * pgp)
+snprint_pg_selector (char * buff, size_t len, struct pathgroup * pgp, int group)
 {
 	return snprint_str(buff, len, pgp->selector);
 }
 
 static int
-snprint_pg_pri (char * buff, size_t len, struct pathgroup * pgp)
+snprint_pg_uuid (char * buff, size_t len, struct pathgroup * pgp, int group_num)
+{
+	struct path * pp;
+
+	pp = VECTOR_LAST_SLOT(pgp->paths);
+	if (pp != NULL)
+		return snprint_str(buff, len, pp->wwid);
+	else
+		return snprint_str(buff, len, "");
+}
+
+static int
+snprint_pg_group (char * buff, size_t len, struct pathgroup * pgp,
+		int group_num)
+{
+	return snprint_int(buff, len, group_num);
+}
+
+static int
+snprint_pg_pri (char * buff, size_t len, struct pathgroup * pgp, int group)
 {
 	/*
 	 * path group priority is not updated for every path prio change,
@@ -419,7 +443,7 @@ snprint_pg_pri (char * buff, size_t len, struct pathgroup * pgp)
 }
 
 static int
-snprint_pg_state (char * buff, size_t len, struct pathgroup * pgp)
+snprint_pg_state (char * buff, size_t len, struct pathgroup * pgp, int group)
 {
 	switch (pgp->status) {
 	case PGSTATE_ENABLED:
@@ -576,6 +600,7 @@ struct path_data pd[] = {
 	{'i', "hcil",          0, snprint_hcil},
 	{'d', "dev",           0, snprint_dev},
 	{'D', "dev_t",         0, snprint_dev_t},
+	{'g', "group",         0, snprint_path_groupnumber},
 	{'t', "dm_st",         0, snprint_dm_path_state},
 	{'o', "dev_st",        0, snprint_offline},
 	{'T', "chk_st",        0, snprint_chk_state},
@@ -595,7 +620,9 @@ struct path_data pd[] = {
 };
 
 struct pathgroup_data pgd[] = {
+	{'w', "uuid",          0, snprint_pg_uuid},
 	{'s', "selector",      0, snprint_pg_selector},
+	{'g', "group",         0, snprint_pg_group},
 	{'p', "pri",           0, snprint_pg_pri},
 	{'t', "dm_st",         0, snprint_pg_state},
 	{0, NULL, 0 , NULL}
@@ -637,6 +664,30 @@ get_path_layout (vector pathvec, int header)
 		vector_foreach_slot (pathvec, pp, i) {
 			pd[j].snprint(buff, MAX_FIELD_LEN, pp);
 			pd[j].width = MAX(pd[j].width, strlen(buff));
+		}
+	}
+}
+
+void
+get_pathgroup_layout (vector mpvec, int header)
+{
+	int i, j, k;
+	char buff[MAX_FIELD_LEN];
+	struct pathgroup * pgp;
+	struct multipath * mpp;
+
+	for (i = 0; pgd[i].header; i++) {
+		if (header)
+			pgd[i].width = strlen(pgd[i].header);
+		else
+			pgd[i].width = 0;
+
+		vector_foreach_slot (mpvec, mpp, j) {
+			vector_foreach_slot (mpp->pg, pgp, k) {
+				pgp->selector = mpp->selector; /* hack */
+				pgd[i].snprint(buff, MAX_FIELD_LEN, pgp, k);
+				pgd[i].width = MAX(pgd[i].width, strlen(buff));
+			}
 		}
 	}
 }
@@ -849,7 +900,7 @@ snprint_path (char * line, int len, char * format,
 
 int
 snprint_pathgroup (char * line, int len, char * format,
-		   struct pathgroup * pgp)
+		   struct pathgroup * pgp, int group, int pad)
 {
 	char * c = line;   /* line cursor */
 	char * s = line;   /* for padding */
@@ -874,8 +925,42 @@ snprint_pathgroup (char * line, int len, char * format,
 		if (!(data = pgd_lookup(*f)))
 			continue;
 
-		data->snprint(buff, MAX_FIELD_LEN, pgp);
+		data->snprint(buff, MAX_FIELD_LEN, pgp, group);
 		PRINT(c, TAIL, "%s", buff);
+		if (pad)
+			PAD(data->width);
+	} while (*f++);
+
+	ENDLINE;
+	return (c - line);
+}
+
+int
+snprint_pathgroup_header (char * line, int len, char * format)
+{
+	char * c = line;   /* line cursor */
+	char * s = line;   /* for padding */
+	char * f = format; /* format string cursor */
+	int fwd;
+	struct pathgroup_data * data;
+
+	memset(line, 0, len);
+
+	do {
+		if (!TAIL)
+			break;
+
+		if (*f != '%') {
+			*c++ = *f;
+			NOPAD;
+			continue;
+		}
+		f++;
+
+		if (!(data = pgd_lookup(*f)))
+			continue; /* unknown wildcard */
+
+		PRINT(c, TAIL, "%s", data->header);
 		PAD(data->width);
 	} while (*f++);
 
@@ -969,7 +1054,8 @@ snprint_multipath_topology (char * buff, int len, struct multipath * mpp,
 			strcpy(f, "|-+- " PRINT_PG_INDENT);
 		} else
 			strcpy(f, "`-+- " PRINT_PG_INDENT);
-		fwd += snprint_pathgroup(buff + fwd, len - fwd, fmt, pgp);
+		fwd += snprint_pathgroup(buff + fwd, len - fwd, fmt, pgp, j,
+					 1/*padding*/);
 		if (fwd > len)
 			return len;
 
@@ -1559,12 +1645,13 @@ print_multipath (struct multipath * mpp, char * style)
 }
 
 extern void
-print_pathgroup (struct pathgroup * pgp, char * style)
+print_pathgroup (struct pathgroup * pgp, char * style, int group)
 {
 	char line[MAX_LINE_LEN];
 
 	memset(&line[0], 0, MAX_LINE_LEN);
-	snprint_pathgroup(&line[0], MAX_LINE_LEN, style, pgp);
+	snprint_pathgroup(&line[0], MAX_LINE_LEN, style, pgp, group,
+			  1/*padding*/);
 	printf("%s", line);
 }
 

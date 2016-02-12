@@ -31,12 +31,13 @@ ifndef SYSTEMDPATH
 	SYSTEMDPATH=usr/lib
 endif
 
-prefix      = 
+prefix      =
 exec_prefix = $(prefix)
 bindir      = $(exec_prefix)/sbin
 libudevdir  = $(prefix)/$(SYSTEMDPATH)/udev
 udevrulesdir = $(libudevdir)/rules.d
 multipathdir = $(TOPDIR)/libmultipath
+libdmmpdir  = $(TOPDIR)/libdmmp
 mandir      = $(prefix)/usr/share/man/man8
 man5dir     = $(prefix)/usr/share/man/man5
 man3dir      = $(prefix)/usr/share/man/man3
@@ -45,6 +46,8 @@ syslibdir   = $(prefix)/$(LIB)
 libdir	    = $(prefix)/$(LIB)/multipath
 unitdir     = $(prefix)/$(SYSTEMDPATH)/systemd/system
 mpathpersistdir = $(TOPDIR)/libmpathpersist
+includedir  = $(prefix)/usr/include
+pkgconfdir  = $(prefix)/usr/share/pkgconfig
 
 GZIP        = gzip -9 -c
 INSTALL_PROGRAM = install

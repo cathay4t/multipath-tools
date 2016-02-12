@@ -1,6 +1,7 @@
 #define PRINT_PATH_LONG      "%w %i %d %D %p %t %T %s %o"
 #define PRINT_PATH_INDENT    "%i %d %D %t %T %o"
 #define PRINT_PATH_CHECKER   "%i %d %D %p %t %T %o %C"
+#define PRINT_GROUP_CHECKER  "%w %g %s %p %t"
 #define PRINT_MAP_STATUS     "%n %F %Q %N %t %r"
 #define PRINT_MAP_STATS      "%n %0 %1 %2 %3 %4"
 #define PRINT_MAP_NAMES      "%n %d %w"
@@ -30,14 +31,18 @@ struct pathgroup_data {
 	char wildcard;
 	char * header;
 	int width;
-	int (*snprint)(char * buff, size_t len, struct pathgroup * pgp);
+	int (*snprint)(char * buff, size_t len, struct pathgroup * pgp, int group);
 };
 
 void get_path_layout (vector pathvec, int header);
 void get_multipath_layout (vector mpvec, int header);
+void get_pathgroup_layout (vector mpvec, int header);
 int snprint_path_header (char *, int, char *);
 int snprint_multipath_header (char *, int, char *);
+int snprint_pathgroup_header (char *, int, char *);
 int snprint_path (char *, int, char *, struct path *, int);
+int snprint_pathgroup (char * line, int len, char * format,
+		struct pathgroup * pgp, int group, int pad);
 int snprint_multipath (char *, int, char *, struct multipath *, int);
 int snprint_multipath_topology (char *, int, struct multipath * mpp,
 				int verbosity);
@@ -55,7 +60,7 @@ int snprint_overrides (char *, int, struct hwentry *);
 void print_multipath_topology (struct multipath * mpp, int verbosity);
 void print_path (struct path * pp, char * style);
 void print_multipath (struct multipath * mpp, char * style);
-void print_pathgroup (struct pathgroup * pgp, char * style);
+void print_pathgroup (struct pathgroup * pgp, char * style, int group);
 void print_map (struct multipath * mpp, char * params);
 void print_all_paths (vector pathvec, int banner);
 void print_all_paths_custo (vector pathvec, int banner, char *fmt);
